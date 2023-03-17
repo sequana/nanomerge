@@ -16,7 +16,7 @@ def test_standalone_script(tmpdir):
     samplesheet = os.sep.join((test_dir, 'data',  "samplesheet.csv"))
     summary = os.sep.join((test_dir, 'data', "sequence_summary.txt"))
     sys.argv = ["test", "--input-directory", input_dir, "--working-directory", str(tmpdir), "--force", 
-        "--input-pattern", "'*/*fastq.gz'", "--samplesheet", samplesheet, "--summary", summary]
+        "--input-pattern", "*/*fastq.gz", "--samplesheet", samplesheet, "--summary", summary]
     m.main()
 
 def test_standalone_script2(tmpdir):
@@ -24,7 +24,9 @@ def test_standalone_script2(tmpdir):
     samplesheet = os.sep.join((test_dir, 'data',  "samplesheet_unbarcoded.csv"))
     summary = os.sep.join((test_dir, 'data',  "sequence_summary.txt"))
     sys.argv = ["test", "--input-directory", input_dir, "--working-directory", str(tmpdir), "--force", 
-        "--input-pattern", "'*fastq.gz'", "--samplesheet", samplesheet, "--summary", summary]
+        "--input-pattern", "*fastq.gz", "--samplesheet", samplesheet, "--summary", summary]
+
+    print(sys.argv)
     m.main()
 
 
