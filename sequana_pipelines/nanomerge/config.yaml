@@ -1,0 +1,37 @@
+# ============================================================================
+# Config file for Quality Control
+# ==========================================[ Sections for the users ]========
+#
+# One of input_directory, input_pattern and input_samples must be provided
+# If input_directory provided, use it otherwise if input_pattern provided,
+# use it, otherwise use input_samples.
+# ============================================================================
+
+# Keep input_readtag empty for nanopore
+#input_directory: '/home/cokelaer/TEMP/fastq_pass/barcode21'
+input_directory: '/home/cokelaer/TEMP/fastq_pass/'
+input_readtag:
+input_pattern: '*/*.fastq.gz'
+summary: /home/cokelaer/TEMP/fastq_pass/sequencing_summary_AOI637_ef78de7c_aef0cc4b.txt
+#samplesheet: "samplesheet1.csv"
+samplesheet: "samplesheet.csv"
+
+################################################################################
+# extra_prefixes_to_strip
+#
+# In most cases, the input_directory and input_pattern (and input_read_tag for paired analysis)
+# allows us to retrieve unique sample names. We automatically removed common prefixes for you.
+#
+# Sometimes, some prefixes are not common to all samples but still need to be removed
+# to get unique sample names or better output. You can provide extra prefixes to be removed
+# by uncommenting and filling the field extra_prefixes_to_strip.
+#
+# For instance, if you have files called prefix.mess.A.fastq.gz and prefix.B.fastq.gz
+# 'prefix.' will be removed automatically because it is common, but not 'mess'. 
+# use thoses prefixes in the left to right order ['prefix', 'mess'] or ['prefix.mess']
+#
+# extra_prefixes_to_strip: []
+
+apptainers:
+  pycoqc: https://zenodo.org/record/7746269/files/pycoqc_2.5.2.img
+

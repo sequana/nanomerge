@@ -1,0 +1,132 @@
+#
+#  This file is part of Sequana software
+#
+#  Copyright (c) 2016-2021 - Sequana Dev Team (https://sequana.readthedocs.io)
+#
+#  Distributed under the terms of the 3-clause BSD license.
+#  The full license is in the LICENSE file, distributed with this software.
+#
+#  Website:       https://github.com/sequana/sequana
+#  Documentation: http://sequana.readthedocs.io
+#  Contributors:  https://github.com/sequana/sequana/graphs/contributors
+##############################################################################
+
+"""nanomerge pipeline
+
+Author: Sequana Developers
+
+This pipeline is part of Sequana project (sequana.readthedocs.io)
+
+Execution:
+1. prepare the pipelie:
+
+    sequana_nanomerge --help
+
+2. exceute it either manually:
+
+    snakemake -s nanomerge.rules --forceall --stats stats.txt --cores 4
+
+or following the instructions from step 1.
+"""
+
+from pathlib import Path
+import pandas as pd
+from sequana_pipetools import snaketools as sm
+
+# This must be defined before the include
+configfile: "config.yaml"
+
+
+# A convenient manager
+manager = sm.PipelineManager("nanomerge", config)
+
+# convenient aliases
+input_directory = Path(config["input_directory"])
+input_pattern = config["input_pattern"]
+
+
+# infer barcoded directories
+barcodes = [x.name for x in input_directory.glob("*") if x.is_dir()]
+
+class Sample():
+
+    def __init__(self, samplesheet, barcoded):
+        self.df = pd.read_csv(samplesheet)
+        self.barcoded = barcoded
+
+    def get_barcode_from_sample(self, sample):
+        candidate = self.df.query("sample==@sample")['barcode'].values[0]
+        return candidate
+
+
+if len(barcodes) == 0:
+    samples = Sample(config['samplesheet'], barcoded=False)
+else:
+    samples = Sample(config['samplesheet'], barcoded=True)
+
+
+if config["summary"]:
+    qc = ["summary.html"]
+else:
+    qc = []
+
+# ========================================================================= pipeline starts here 
+rule pipeline:
+    input:
+        expand("./fastq/{project}/{sample}.fastq.gz", zip, project=samples.df['project'], sample=samples.df['sample']),
+        qc
+
+
+def get_input_merge(wildcards):
+    if samples.barcoded:
+        barcode = samples.get_barcode_from_sample(wildcards.sample)
+        filenames = list((input_directory / barcode).glob("*.fastq.gz"))
+    else:
+        filenames = list((input_directory).glob(input_pattern))
+    return filenames
+
+
+if config["summary"]:
+    rule pyco:
+        input:
+            config['summary']
+        output:
+            "summary.html"
+        log:
+            "pyco.log"
+        container:
+            config["apptainers"]["pycoqc"]
+        shell:
+            """
+            pycoQC --summary_file {input} -o {output} > {log} 2>&1
+            """
+
+rule merge:
+    input:
+        get_input_merge
+    output:
+        "./fastq/{project}/{sample}.fastq.gz"
+
+    shell:
+        """
+        cat {input} > {output}
+        """
+
+
+# ======================================================================================== rulegraph
+
+
+onsuccess:
+    shell("chmod -R g+w .")
+
+    import colorlog
+    log = colorlog.getLogger("sequana.nanomerge")
+    log.setLevel("INFO")
+
+    manager.teardown(extra_files_to_remove=["pyco.log"])
+    print("Once done, please clean up the directory using\n'make clean'")
+
+onerror:
+    from sequana_pipetools.errors import PipeError
+    p = PipeError("nanomerge")
+    p.status()
