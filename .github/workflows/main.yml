@@ -42,7 +42,7 @@ jobs:
 
     - name: conda
       run: |
-        conda install -c conda-forge -c bioconda --quiet -y python=${{ matrix.python }} bwa
+        conda install -c conda-forge -c bioconda --quiet -y python=${{ matrix.python }} pycoqc
 
     - name: Install dependencies
       run: |
@@ -54,7 +54,7 @@ jobs:
 
     - name: testing
       run: |
-        pytest --cov-report term --cov=sequana_pipelines.{{cookiecutter.name}}
+        pytest --cov-report term --cov=sequana_pipelines.nanomerge
     - name: coveralls
       run: |
         echo $COVERALLS_REPO_TOKEN
