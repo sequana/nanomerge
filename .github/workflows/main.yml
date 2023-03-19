@@ -42,7 +42,8 @@ jobs:
 
     - name: conda
       run: |
-        conda install -c conda-forge -c bioconda --quiet -y python=${{ matrix.python }} pycoQC
+        conda install -c conda-forge -c bioconda --quiet -y python=${{ matrix.python }} mamba
+        mamba install pycoqc
 
     - name: Install dependencies
       run: |

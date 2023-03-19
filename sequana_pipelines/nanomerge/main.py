@@ -95,11 +95,7 @@ def main(args=None):
 
     # create the beginning of the command and the working directory
     manager.setup()
-    from sequana import logger
 
-    logger.setLevel(options.level)
-    logger.name = "sequana_nanomerge"
-    logger.info(f"Welcome to sequana_nanomerge pipeline.")
 
     # fill the config file with input parameters
     if options.from_project is None:
@@ -114,11 +110,14 @@ def main(args=None):
         else:
             raise IOError(f"{options.samplesheet} not found. Requested to perfom the merge of FastQ files")
 
-        if options.summary and os.path.exists(options.summary):
-            shutil.copy(options.summary, manager.workdir)
-            cfg.summary = Path(options.summary).name
-        elif not os.path.exists(options.summary):
-            raise IOError(f"{options.summary} not found. Check your input filename")
+        if options.summary:
+            if os.path.exists(options.summary):
+                shutil.copy(options.summary, manager.workdir)
+                cfg.summary = Path(options.summary).name
+            elif not os.path.exists(options.summary):
+                raise IOError(f"{options.summary} not found. Check your input filename")
+        else:
+            cfg.summary = None
 
 
     # finalise the command and save it; copy the snakemake. update the config
