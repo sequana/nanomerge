@@ -42,7 +42,7 @@ jobs:
 
     - name: conda
       run: |
-        conda install -c conda-forge -c bioconda --quiet -y python=${{ matrix.python }} pycoqc
+        conda install -c conda-forge -c bioconda --quiet -y python=${{ matrix.python }} pycoQC
 
     - name: Install dependencies
       run: |

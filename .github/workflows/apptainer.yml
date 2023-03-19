@@ -54,5 +54,5 @@ jobs:
 
     - name: testing
       run: |
-        sequana_nanomerge --input-directory test/data/ --use-apptainer && cd nanomerge && sh nanomerge.sh
+        sequana_nanomerge --input-directory test/data/barcoded --samplesheet test/data/samplesheet.csv --summary test/data/sequana_summary.txt --use-apptainer && cd nanomerge && sh nanomerge.sh
 
