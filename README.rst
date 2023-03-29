@@ -37,16 +37,16 @@ Usage
 
 ::
 
-    sequana_pipelines_nanomerge --help
+    sequana_nanomerge --help
 
 If you data is barcoded::
 
-    sequana_pipelines_nanomerge --input-directory DATAPATH --samplesheet samplesheet.csv
+    sequana_nanomerge --input-directory DATAPATH --samplesheet samplesheet.csv
         --summary summary.txt --input-pattern '*/*fastq.gz'
 
 otherwise::
 
-    sequana_pipelines_nanomerge --input-directory DATAPATH --samplesheet samplesheet.csv
+    sequana_nanomerge --input-directory DATAPATH --samplesheet samplesheet.csv
         --summary summary.txt --input-pattern '*fastq.gz'
 
 The --summary is optional and takes as input the output of albacore demultiplexing. usually a file called sequencing_summary.txt
