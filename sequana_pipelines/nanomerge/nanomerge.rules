@@ -55,7 +55,7 @@ class Sample():
         self.barcoded = barcoded
 
     def get_barcode_from_sample(self, sample):
-        candidate = self.df.query("sample==@sample")['barcode'].values[0]
+        candidate = self.df.query("sample==@sample or samplename==@sample")['barcode'].values[0]
         return candidate
 
 
