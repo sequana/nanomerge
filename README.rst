@@ -110,7 +110,7 @@ This pipelines requires the following executable(s), which is optional:
 
 - pycoQC
 
-.. image:: https://raw.githubusercontent.com/sequana/sequana_nanomerge/master/sequana_pipelines/nanomerge/dag.png
+.. image:: https://raw.githubusercontent.com/sequana/nanomerge/main/sequana_pipelines/nanomerge/dag.png
 
 
 Details
