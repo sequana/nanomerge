@@ -39,12 +39,12 @@ Usage
 
     sequana_nanomerge --help
 
-If you data is barcoded::
+If you data is barcoded, they are usually in sub-directories barcoded/barcodeXY::
 
-    sequana_nanomerge --input-directory DATAPATH --samplesheet samplesheet.csv
+    sequana_nanomerge --input-directory DATAPATH/barcoded --samplesheet samplesheet.csv
         --summary summary.txt --input-pattern '*/*fastq.gz'
 
-otherwise::
+otherwise all fastq files are in DATAPATH/::
 
     sequana_nanomerge --input-directory DATAPATH --samplesheet samplesheet.csv
         --summary summary.txt --input-pattern '*fastq.gz'
@@ -77,6 +77,11 @@ For a non-barcoded run, you must provide a file where the barcode column can be 
     barcode,project,sample
     ,main,A
 
+or::
+
+    project,sample
+    main,A
+
 Usage with apptainer::
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -97,7 +102,7 @@ if you decide to use snakemake manually, do not forget to add apptainer options:
 
     snakemake -s nanomerge.rules -c config.yaml --cores 4 --stats stats.txt --use-apptainer --apptainer-prefix ~/.sequana/apptainers --apptainer-args "-B /home:/home"
 
-    
+
 Requirements
 ~~~~~~~~~~~~
 
@@ -127,6 +132,7 @@ Changelog
 ========= ====================================================================
 Version   Description
 ========= ====================================================================
+1.0.0     Stable release ready for production
 0.0.1     **First release.**
 ========= ====================================================================
 

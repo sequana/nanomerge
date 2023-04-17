@@ -33,6 +33,7 @@ from pathlib import Path
 import pandas as pd
 from sequana_pipetools import snaketools as sm
 
+sequana_wrapper_branch = "main"
 # This must be defined before the include
 configfile: "config.yaml"
 
@@ -55,8 +56,14 @@ class Sample():
         self.barcoded = barcoded
 
     def get_barcode_from_sample(self, sample):
-        candidate = self.df.query("sample==@sample")['barcode'].values[0]
+        if "sample" in self.df.columns:
+            candidate = self.df.query("sample==@sample")['barcode'].values[0]
+        elif "samplename" in self.df.columns:
+            candidate = self.df.query("sample==@samplename")['barcode'].values[0]
         return candidate
+
+    def get_projects(self):
+        return self.df.project.unique()
 
 
 if len(barcodes) == 0:
@@ -66,15 +73,17 @@ else:
 
 
 if config["summary"]:
-    qc = ["summary.html"]
+    qc_file = "pyco/pyco.html"
 else:
-    qc = []
+    qc_file = ""
 
-# ========================================================================= pipeline starts here 
+# ========================================================================= pipeline starts here
+expected_fastqs = expand("./{project}/{sample}.fastq.gz", zip, project=samples.df['project'], sample=samples.df['sample']),
 rule pipeline:
     input:
-        expand("./fastq/{project}/{sample}.fastq.gz", zip, project=samples.df['project'], sample=samples.df['sample']),
-        qc
+        expected_fastqs,
+        svg = ".sequana/rulegraph.svg",
+        html="summary.html"
 
 
 def get_input_merge(wildcards):
@@ -91,9 +100,9 @@ if config["summary"]:
         input:
             config['summary']
         output:
-            "summary.html"
+            temp(qc_file)
         log:
-            "pyco.log"
+            temp(qc_file)
         container:
             config["apptainers"]["pycoqc"]
         shell:
@@ -105,7 +114,7 @@ rule merge:
     input:
         get_input_merge
     output:
-        "./fastq/{project}/{sample}.fastq.gz"
+        "./{project}/{sample}.fastq.gz"
 
     shell:
         """
@@ -113,18 +122,47 @@ rule merge:
         """
 
 
+rule rulegraph:
+    input: str(manager.snakefile)
+    output:
+        svg = ".sequana/rulegraph.svg"
+    params:
+        configname = "config.yaml"
+    wrapper:
+        f"{sequana_wrapper_branch}/wrappers/rulegraph"
+
+
+rule html_report:
+    input:
+        list(expected_fastqs) + [qc_file]
+    output:
+        "summary.html"
+    run:
+        from sequana.modules_report.summary import SummaryModule2
+        from sequana_pipelines import nanomerge
+        os.makedirs("images", exist_ok=True)
+        data = {"name": "nanomerge",
+                 "rulegraph": ".sequana/rulegraph.svg",
+                 "pipeline_version": nanomerge.version}
+        manager.teardown(extra_files_to_remove=["pyco/pyco.log", qc_file])
+
+        dirs = ",".join([f'<a href="{x}/">{x}</a>' for x in samples.get_projects()])
+        if config['summary']:
+            with open(qc_file, "r") as fout:
+                pycodata = fout.read()
+                pycodata = '<div class="columns">' + pycodata.split('<div class="columns">')[-1].replace("</div>\n</body>\n</html>","")
+
+            s = SummaryModule2(data, f"Your data are available in {dirs} directories" + pycodata)
+        else:
+            s = SummaryModule2(data, f"no summary found. Please checkout the sub directories {dirs}. They should contain your final fastq files for each project.")
+
 # ======================================================================================== rulegraph
 
 
 onsuccess:
-    shell("chmod -R g+w .")
 
-    import colorlog
-    log = colorlog.getLogger("sequana.nanomerge")
-    log.setLevel("INFO")
-
-    manager.teardown(extra_files_to_remove=["pyco.log"])
     print("Once done, please clean up the directory using\n'make clean'")
+    shell("chmod -R g+w .")
 
 onerror:
     from sequana_pipetools.errors import PipeError
