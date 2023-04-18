@@ -9,6 +9,18 @@
 .. image:: https://github.com/sequana/nanomerge/actions/workflows/main.yml/badge.svg
    :target: https://github.com/sequana/nanomerge/actions/workflows
 
+.. image:: https://coveralls.io/repos/github/sequana/nanomerge/badge.svg?branch=main
+   :target: https://coveralls.io/github/sequana/nanomerge?branch=main
+
+
+.. image:: http://joss.theoj.org/papers/10.21105/joss.00352/status.svg
+   :target: http://joss.theoj.org/papers/10.21105/joss.00352
+   :alt: JOSS (journal of open source software) DOI
+
+.. image:: https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C3.10-blue.svg
+    :target: https://pypi.python.org/pypi/sequana
+    :alt: Python 3.8 | 3.9 | 3.10
+
 
 
 
@@ -28,9 +40,11 @@ You can install the packages using pip::
 
     pip install sequana_nanomerge --upgrade
 
-An optional requirements is pycoQC, which can be install with conda/mamba using e.g.:
+An optional requirements is pycoQC, which can be install with conda/mamba using e.g.::
 
-    conda install pycoQC.
+    conda install pycoQC
+
+you will also need graphviz installed.
 
 Usage
 ~~~~~
@@ -49,9 +63,9 @@ otherwise all fastq files are in DATAPATH/::
     sequana_nanomerge --input-directory DATAPATH --samplesheet samplesheet.csv
         --summary summary.txt --input-pattern '*fastq.gz'
 
-The --summary is optional and takes as input the output of albacore demultiplexing. usually a file called sequencing_summary.txt
+The --summary is optional and takes as input the output of albacore/guppy demultiplexing. usually a file called sequencing_summary.txt
 
-Note that the different between the two is the extra `*/` before the `*.fastq.gz` pattern since barcoded files are in individual subdirectories..
+Note that the different between the two is the extra `*/` before the `*.fastq.gz` pattern since barcoded files are in individual subdirectories.
 
 In both bases, the command creates a directory with the pipeline and configuration file. You will then need to execute the pipeline::
 
@@ -65,19 +79,19 @@ retrieve the pipeline itself and its configuration files and then execute the pi
 
 Or use `sequanix <https://sequana.readthedocs.io/en/master/sequanix.html>`_ interface.
 
-COncerning the sample sheet, whther your data is barcoded or not, it should be a CSV file ::
+Concerning the sample sheet, whether your data is barcoded or not, it should be a CSV file ::
 
     barcode,project,sample
     barcode01,main,A
     barcode02,main,B
     barcode03,main,C
 
-For a non-barcoded run, you must provide a file where the barcode column can be set (empty) or just removed::
+For a non-barcoded run, you must provide a file where the barcode column can be set (empty)::
 
     barcode,project,sample
     ,main,A
 
-or::
+or just removed::
 
     project,sample
     main,A
@@ -109,6 +123,7 @@ Requirements
 This pipelines requires the following executable(s), which is optional:
 
 - pycoQC
+- dot
 
 .. image:: https://raw.githubusercontent.com/sequana/nanomerge/main/sequana_pipelines/nanomerge/dag.png
 
@@ -132,6 +147,7 @@ Changelog
 ========= ====================================================================
 Version   Description
 ========= ====================================================================
+1.0.1     Fix the pyco file paths, update requirements and doc
 1.0.0     Stable release ready for production
 0.0.1     **First release.**
 ========= ====================================================================

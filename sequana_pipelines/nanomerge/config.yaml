@@ -8,12 +8,10 @@
 # ============================================================================
 
 # Keep input_readtag empty for nanopore
-#input_directory: '/home/cokelaer/TEMP/fastq_pass/barcode21'
-input_directory: '/home/cokelaer/TEMP/fastq_pass/'
+input_directory:
 input_readtag:
 input_pattern: '*/*.fastq.gz'
-summary: /home/cokelaer/TEMP/fastq_pass/sequencing_summary_AOI637_ef78de7c_aef0cc4b.txt
-#samplesheet: "samplesheet1.csv"
+summary:
 samplesheet: "samplesheet.csv"
 
 ################################################################################
