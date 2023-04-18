@@ -9,6 +9,18 @@
 .. image:: https://github.com/sequana/nanomerge/actions/workflows/main.yml/badge.svg
    :target: https://github.com/sequana/nanomerge/actions/workflows
 
+.. image:: https://coveralls.io/repos/github/sequana/nanomerge/badge.svg?branch=main
+   :target: https://coveralls.io/github/sequana/nanomerge?branch=main
+
+
+.. image:: http://joss.theoj.org/papers/10.21105/joss.00352/status.svg
+   :target: http://joss.theoj.org/papers/10.21105/joss.00352
+   :alt: JOSS (journal of open source software) DOI
+
+.. image:: https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C3.10-blue.svg
+    :target: https://pypi.python.org/pypi/sequana
+    :alt: Python 3.8 | 3.9 | 3.10
+
 
 
 
