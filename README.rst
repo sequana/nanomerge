@@ -147,8 +147,8 @@ Changelog
 ========= ====================================================================
 Version   Description
 ========= ====================================================================
-1.0.2     CSV can now handle sample or samplename column name in samplesheet.
-1.0.1     Fix the pyco file paths, update requirements and doc
+1.0.1     * CSV can now handle sample or samplename column name in samplesheet.
+          * Fix the pyco file paths, update requirements and doc
 1.0.0     Stable release ready for production
 0.0.1     **First release.**
 ========= ====================================================================
