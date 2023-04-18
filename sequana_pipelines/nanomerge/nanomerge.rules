@@ -73,12 +73,15 @@ else:
 
 
 if config["summary"]:
-    qc_file = "pyco/pyco.html"
+    qc_file = ["pyco/pyco.html"]
 else:
-    qc_file = ""
+    qc_file = []
 
 # ========================================================================= pipeline starts here
-expected_fastqs = expand("./{project}/{sample}.fastq.gz", zip, project=samples.df['project'], sample=samples.df['sample']),
+expected_fastqs = expand("./{project}/{sample}.fastq.gz", zip, project=samples.df['project'],
+        sample=samples.df['sample'])
+
+
 rule pipeline:
     input:
         expected_fastqs,
@@ -100,9 +103,9 @@ if config["summary"]:
         input:
             config['summary']
         output:
-            temp(qc_file)
+            "pyco/pyco.html"
         log:
-            temp(qc_file)
+            "pyco/pyco.log"
         container:
             config["apptainers"]["pycoqc"]
         shell:
@@ -110,12 +113,12 @@ if config["summary"]:
             pycoQC --summary_file {input} -o {output} > {log} 2>&1
             """
 
+
 rule merge:
     input:
         get_input_merge
     output:
         "./{project}/{sample}.fastq.gz"
-
     shell:
         """
         cat {input} > {output}
@@ -134,7 +137,7 @@ rule rulegraph:
 
 rule html_report:
     input:
-        list(expected_fastqs) + [qc_file]
+        list(expected_fastqs) + qc_file
     output:
         "summary.html"
     run:
@@ -144,11 +147,11 @@ rule html_report:
         data = {"name": "nanomerge",
                  "rulegraph": ".sequana/rulegraph.svg",
                  "pipeline_version": nanomerge.version}
-        manager.teardown(extra_files_to_remove=["pyco/pyco.log", qc_file])
+        manager.teardown(extra_files_to_remove=["pyco/pyco.log", "pyco/pyco.html"])
 
         dirs = ",".join([f'<a href="{x}/">{x}</a>' for x in samples.get_projects()])
         if config['summary']:
-            with open(qc_file, "r") as fout:
+            with open("pyco/pyco.html", "r") as fout:
                 pycodata = fout.read()
                 pycodata = '<div class="columns">' + pycodata.split('<div class="columns">')[-1].replace("</div>\n</body>\n</html>","")
 
@@ -163,6 +166,7 @@ onsuccess:
 
     print("Once done, please clean up the directory using\n'make clean'")
     shell("chmod -R g+w .")
+    shell("rm -rf pyco rulegraph")
 
 onerror:
     from sequana_pipetools.errors import PipeError
