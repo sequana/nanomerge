@@ -54,12 +54,11 @@ class Sample():
     def __init__(self, samplesheet, barcoded):
         self.df = pd.read_csv(samplesheet)
         self.barcoded = barcoded
+        if "sample" not in self.df.columns:
+            self.df['sample'] = self.df['samplename']
 
     def get_barcode_from_sample(self, sample):
-        if "sample" in self.df.columns:
-            candidate = self.df.query("sample==@sample")['barcode'].values[0]
-        elif "samplename" in self.df.columns:
-            candidate = self.df.query("sample==@samplename")['barcode'].values[0]
+        candidate = self.df.query("sample==@sample")['barcode'].values[0]
         return candidate
 
     def get_projects(self):
