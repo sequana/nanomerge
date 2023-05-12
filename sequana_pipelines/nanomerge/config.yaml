@@ -25,11 +25,20 @@ samplesheet: "samplesheet.csv"
 # by uncommenting and filling the field extra_prefixes_to_strip.
 #
 # For instance, if you have files called prefix.mess.A.fastq.gz and prefix.B.fastq.gz
-# 'prefix.' will be removed automatically because it is common, but not 'mess'. 
+# 'prefix.' will be removed automatically because it is common, but not 'mess'.
 # use thoses prefixes in the left to right order ['prefix', 'mess'] or ['prefix.mess']
 #
 # extra_prefixes_to_strip: []
 
 apptainers:
-  pycoqc: https://zenodo.org/record/7746269/files/pycoqc_2.5.2.img
+  pycoqc: "https://zenodo.org/record/7746269/files/pycoqc_2.5.2.img"
+  graphviz: "https://zenodo.org/record/7928262/files/graphviz_7.0.5.img"
+
+
+###################################################################################
+#
+# subsample: If not None, N number of reads will be randomly selected instead of
+#     the entire dataset
+pycoqc:
+  subsample: 1000000
 

@@ -22,3 +22,13 @@ mapping:
     "apptainers":
         type: any
         required: true
+
+    "pycoqc":
+        type: map
+        mapping:
+          "subsample":
+            type: int
+            required: False
+
+
+
