@@ -105,11 +105,13 @@ if config["summary"]:
             "pyco/pyco.html"
         log:
             "pyco/pyco.log"
+        params:
+            sample=config["pycoqc"]["subsample"]
         container:
             config["apptainers"]["pycoqc"]
         shell:
             """
-            pycoQC --summary_file {input} -o {output} > {log} 2>&1
+            pycoQC --summary_file {input} -o {output} --sample {params.sample} > {log} 2>&1
             """
 
 
@@ -125,13 +127,25 @@ rule merge:
 
 
 rule rulegraph:
-    input: str(manager.snakefile)
+    input:
+        workflow.snakefile
     output:
-        svg = ".sequana/rulegraph.svg"
+        "rulegraph/rulegraph.dot"
     params:
         configname = "config.yaml"
     wrapper:
         f"{sequana_wrapper_branch}/wrappers/rulegraph"
+
+
+rule dot2svg:
+    input:
+        "rulegraph/rulegraph.dot"
+    output:
+        ".sequana/rulegraph.svg"
+    container:
+        config['apptainers']['graphviz']
+    shell:
+        """dot -Tsvg {input} -o {output}"""
 
 
 rule html_report:

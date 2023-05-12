@@ -147,6 +147,8 @@ Changelog
 ========= ====================================================================
 Version   Description
 ========= ====================================================================
+1.1.0     * add subsample option and set to 1,000,000 reads to handle large 
+            runs such as promethion
 1.0.1     * CSV can now handle sample or samplename column name in samplesheet.
           * Fix the pyco file paths, update requirements and doc
 1.0.0     Stable release ready for production
