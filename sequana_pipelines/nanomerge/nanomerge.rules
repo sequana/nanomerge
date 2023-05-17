@@ -96,6 +96,13 @@ def get_input_merge(wildcards):
         filenames = list((input_directory).glob(input_pattern))
     return filenames
 
+def get_input_directory(wildcards):
+    if samples.barcoded:
+        barcode = samples.get_barcode_from_sample(wildcards.sample)
+        return input_directory / barcode
+    else:
+        return input_directory
+
 
 if config["summary"]:
     rule pyco:
@@ -120,9 +127,11 @@ rule merge:
         get_input_merge
     output:
         "./{project}/{sample}.fastq.gz"
+    params:
+        indir=get_input_directory
     shell:
         """
-        cat {input} > {output}
+        find {params.indir} -type f -name "*fastq.gz" -exec cat {{}} + > {output}
         """
 
 
@@ -168,7 +177,7 @@ rule html_report:
                 pycodata = fout.read()
                 pycodata = '<div class="columns">' + pycodata.split('<div class="columns">')[-1].replace("</div>\n</body>\n</html>","")
 
-            s = SummaryModule2(data, f"Your data are available in {dirs} directories" + pycodata)
+            s = SummaryModule2(data, f"""Your data are available in {dirs} directories. Please see the summary plots here below (if sequence summary was provided), generated with <a href="https://github.com/a-slide/pycoQC">pycoQC</a> software.""" + pycodata)
         else:
             s = SummaryModule2(data, f"no summary found. Please checkout the sub directories {dirs}. They should contain your final fastq files for each project.")
 
