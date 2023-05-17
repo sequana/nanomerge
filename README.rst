@@ -147,6 +147,8 @@ Changelog
 ========= ====================================================================
 Version   Description
 ========= ====================================================================
+1.2.0     * handle large promethium run by using find+cat instead of just cat
+            to cope with very large number of input files.
 1.1.0     * add subsample option and set to 1,000,000 reads to handle large 
             runs such as promethion
 1.0.1     * CSV can now handle sample or samplename column name in samplesheet.
