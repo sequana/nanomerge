@@ -53,12 +53,13 @@ Usage
 
     sequana_nanomerge --help
 
-If you data is barcoded, they are usually in sub-directories barcoded/barcodeXY::
+If you data is barcoded, they are usually in sub-directories barcoded/barcodeXY so you will need to use a pattern
+(--input-pattern) such as `*/*.gz`::
 
     sequana_nanomerge --input-directory DATAPATH/barcoded --samplesheet samplesheet.csv
         --summary summary.txt --input-pattern '*/*fastq.gz'
 
-otherwise all fastq files are in DATAPATH/::
+otherwise all fastq files are in DATAPATH/ so the input pattern can just be `*.fastq.gz`::
 
     sequana_nanomerge --input-directory DATAPATH --samplesheet samplesheet.csv
         --summary summary.txt --input-pattern '*fastq.gz'
@@ -96,7 +97,7 @@ or just removed::
     project,sample
     main,A
 
-Usage with apptainer::
+Usage with apptainer:
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 With apptainer, initiate the working directory as follows::
@@ -147,8 +148,11 @@ Changelog
 ========= ====================================================================
 Version   Description
 ========= ====================================================================
-1.2.0     * handle large promethium run by using find+cat instead of just cat
-            to cope with very large number of input files.
+1.3.0     * handle large promethium run by using a sub sample of the 
+            sequencing summary file (--sample of pycoQC still loads the entire
+            file in memory)
+1.2.0     * handle large promethium run by using find+cat instead of just 
+            cat to cope with very large number of input files.
 1.1.0     * add subsample option and set to 1,000,000 reads to handle large 
             runs such as promethion
 1.0.1     * CSV can now handle sample or samplename column name in samplesheet.
