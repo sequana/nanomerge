@@ -37,8 +37,13 @@ apptainers:
 
 ###################################################################################
 #
-# subsample: If not None, N number of reads will be randomly selected instead of
-#     the entire dataset
 pycoqc:
-  subsample: 1000000
+  options: 
 
+
+##################################################################################
+# if number of reads is larger than **max_lines**, sub sample the summary by 
+# selection x **percent**
+#
+sub_sample_summary:
+  percentage: 100

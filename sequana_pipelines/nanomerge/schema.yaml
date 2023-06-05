@@ -23,11 +23,19 @@ mapping:
         type: any
         required: true
 
+    "sub_sample_summary":
+      type: map
+      mapping:
+          "percentage":
+              type: int
+              range: {min: 1 ,  max: 100}
+
+
     "pycoqc":
         type: map
         mapping:
-          "subsample":
-            type: int
+          "options":
+            type: str
             required: False
 
 
