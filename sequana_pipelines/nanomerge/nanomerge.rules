@@ -31,6 +31,8 @@ or following the instructions from step 1.
 
 from pathlib import Path
 import pandas as pd
+from pylab import linspace 
+from numpy import zeros
 from sequana_pipetools import snaketools as sm
 
 sequana_wrapper_branch = "main"
@@ -113,11 +115,43 @@ if config["summary"]:
         output:
             "sub_sample_summary/summary.txt"
         params:
-            percentage=config['sub_sample_summary']['percentage'] / 100
-        shell:
-            """
-            head -n 1 {input} > {output} && tail -n +2 {input} | awk -v k={params.percentage} 'BEGIN {{ srand(); n = 0; }} {{ if (n < k * NR) {{ reservoir[n++] = $0; }} else {{ r = int(rand() * n); if (r < k * NR) {{ reservoir[r] = $0; }} }} }} END {{ for (i = 0; i < n; i++) {{ print reservoir[i]; }} }}' >> {output}
-            """
+            percentage=config['sub_sample_summary']['percentage'] / 100,
+            binning = 100
+        run:
+
+
+
+            # We need the min and max first of the entire start time vector
+            max_time = 0.
+            min_time = 24 * 10 * 3600 #(10 days is enough. runs are expected to be 72 hours max)
+            Ntotal = 0
+            with pd.read_csv(input[0], chunksize=10000, sep='\t') as reader:
+                for i, chunk in enumerate(reader):
+                    max_time = max(max_time, chunk.start_time.max())
+                    min_time = min(min_time, chunk.start_time.min())
+                    Ntotal += len(chunk)
+
+            bins = linspace(min_time, max_time, params.binning + 1)
+
+            # now we perform the stratified histogram
+            with pd.read_csv(input[0], chunksize=10000, sep="\t") as reader:
+
+                # we'll save the header once
+                header = True
+
+                # go through all chunks
+                for i,chunk in enumerate(reader):
+
+                    # save rows based on stratified sampling
+                    for j in range(params.binning-1):
+                        X1, X2 = bins[j], bins[j+1]
+                        subdf = chunk.query("start_time>=@X1 and start_time<@X2").sample(frac=params.percentage)
+                        if header is True:
+                            subdf.to_csv(output[0], header=True, mode="w", index=False, sep='\t')
+                            header = False
+                        else:
+                            subdf.to_csv(output[0], header=False, mode="a+", index=False, sep='\t')
+
 
     rule pyco:
         input:
@@ -170,6 +204,8 @@ rule dot2svg:
     shell:
         """dot -Tsvg {input} -o {output}"""
 
+rule get_stats:
+
 
 rule html_report:
     input:
@@ -180,20 +216,83 @@ rule html_report:
         from sequana.modules_report.summary import SummaryModule2
         from sequana_pipelines import nanomerge
         os.makedirs("images", exist_ok=True)
+
         data = {"name": "nanomerge",
                  "rulegraph": ".sequana/rulegraph.svg",
                  "pipeline_version": nanomerge.version}
+
         manager.teardown(extra_files_to_remove=["pyco/pyco.log", "pyco/pyco.html"])
+
+
 
         dirs = ",".join([f'<a href="{x}/">{x}</a>' for x in samples.get_projects()])
         if config['summary']:
+
+            from sequana import FastA
+            from sequana.stats import N50
+            from pylab import mean
+
+            mus = []
+            N50s = []
+            nreads = []
+            sample_names = []
+            barcodes = []
+
+            for sample, filename in manager.samples.items():
+                barcode = filename.split("/")[-2]
+                barcodes.append(barcode)
+                print(sample, filename)
+                f = FastA(filename)
+                lengths = list(f.get_lengths_as_dict().values())
+                mus.append(round(mean(lengths), 0))
+                N50s.append(N50(lengths))
+                nreads.append(len(lengths))
+                sample_names.append(sample)
+
+            total_reads = sum(nreads)
+
+            # a summary table
+            df = pd.DataFrame({
+                "sample": sample_names, 
+                "barcodes": barcodes,
+                "N50": N50s,
+                "mean read length": mus,
+                "Number of reads":nreads},
+                index=sample_names)
+            from sequana.utils.datatables_js import DataTable
+            datatable = DataTable(df, 'nanomerge', index=False)
+            datatable.datatable.datatable_options = {'paging': 'false',
+                                          'buttons': ['copy', 'csv'],
+                                         'bSort': 'true',
+                                        'dom':"RSPrt"
+                                        }
+            js = datatable.create_javascript_function()
+            htmltable = datatable.create_datatable()
+
+            # a warning message
+            percentage=config['sub_sample_summary']['percentage'] / 100
+
+
+            if percentage == 1:
+                subsample = ""
+            else:
+                ratio = round(1 / percentage,2)
+                subsample = f'<b style="color:red">Sub sampling was performed. Numbers here below are approximation of must be multiplies by {ratio} since only {percentage} of the data were used to generate the tables and plots</b>'
+
+            # the pyco qc report
             with open("pyco/pyco.html", "r") as fout:
                 pycodata = fout.read()
                 pycodata = '<div class="columns">' + pycodata.split('<div class="columns">')[-1].replace("</div>\n</body>\n</html>","")
 
-            s = SummaryModule2(data, f"""Your data are available in {dirs} directories. Please see the summary plots here below (if sequence summary was provided), generated with <a href="https://github.com/a-slide/pycoQC">pycoQC</a> software.""" + pycodata)
+            # final report
+            s = SummaryModule2(data, f"""
+                    <h2>General Information</h2>
+                    <p>Your data (fastq files) are available in {dirs} directories. Please see the summary plots here below (if sequence summary was provided), generated with <a href="https://github.com/a-slide/pycoQC">pycoQC</a> software.</p>""" + js + htmltable+f"Total number of reads passing filtering: {total_reads}" + "<hr>" + "<h2>Quality Control information</h2>" + subsample + pycodata)
         else:
-            s = SummaryModule2(data, f"no summary found. Please checkout the sub directories {dirs}. They should contain your final fastq files for each project.")
+            s = SummaryModule2(data, f"No summary was found. Your data  (fastq files) are available in {dirs} directories." + js + htmltable +f"Total number of reads passing filtering: {total_reads}"  )
+
+        
+localrules: html_report
 
 # ======================================================================================== rulegraph
 
