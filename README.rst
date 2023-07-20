@@ -151,6 +151,7 @@ Version   Description
 1.4.0     * sub sampling was biased in v1.3.0. Using stratified sampling to 
             correcly sample large file. Also set a --promethion option that
             auomatically sub sample 10% of the data
+          * add summary table
 1.3.0     * handle large promethium run by using a sub sample of the 
             sequencing summary file (--sample of pycoQC still loads the entire
             file in memory)
