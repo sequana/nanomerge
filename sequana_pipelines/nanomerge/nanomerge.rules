@@ -83,11 +83,19 @@ expected_fastqs = expand("./{project}/{sample}.fastq.gz", zip, project=samples.d
         sample=samples.df['sample'])
 
 
-rule pipeline:
-    input:
-        expected_fastqs,
-        svg = ".sequana/rulegraph.svg",
-        html="summary.html"
+if "barcode" in samples.df.columns:
+    rule pipeline:
+        input:
+            expected_fastqs,
+            svg = ".sequana/rulegraph.svg",
+            html="summary.html",
+else:
+    rule pipeline:
+        input:
+            expected_fastqs,
+            html="summary.html",
+            svg = ".sequana/rulegraph.svg",
+            subsummary=expand("pycoqc/{barcode}_summary.html", barcode=samples.df.barcode.values)
 
 
 def get_input_merge(wildcards):
@@ -152,7 +160,6 @@ if config["summary"]:
                         else:
                             subdf.to_csv(output[0], header=False, mode="a+", index=False, sep='\t')
 
-
     rule pyco:
         input:
             "sub_sample_summary/summary.txt"
@@ -168,6 +175,49 @@ if config["summary"]:
             """
             pycoQC --summary_file {input} -o {output} {params.options} > {log} 2>&1
             """
+
+    if "barcode" in samples.df.columns:
+        rule split_barcode:
+            input: "sub_sample_summary/summary.txt"
+            output: expand("sub_sample_summary/{barcode}_summary.txt", barcode=samples.df.barcode)
+            run:
+                import pandas as pd
+
+                headers = {}
+                for barcode in samples.df.barcode:
+                    headers[barcode] = True
+
+                with pd.read_csv(input[0], chunksize=100000, sep="\t") as reader:
+
+                    for i,chunk in enumerate(reader):
+                        for barcode in samples.df.barcode:
+                            filename= f"sub_sample_summary/{barcode}_summary.txt"
+                            subdf = chunk.query("alias==@barcode")
+                            if len(subdf):
+                                if headers[barcode] is True:
+                                    subdf.to_csv(filename, header=True, mode="w", index=False, sep='\t')
+                                    headers[barcode] = False
+                                else:
+                                    subdf.to_csv(filename, header=False, mode="a+", index=False, sep='\t')
+
+        rule pycoqc_per_barcode:
+            input:
+                "sub_sample_summary/{barcode}_summary.txt"
+            output:
+                "pycoqc/{barcode}_summary.html"
+            log:
+                "pycoqc/{barcode}.log"
+            params:
+                options=config["pycoqc"]["options"]
+            container:
+                config["apptainers"]["pycoqc"]
+            shell:
+                """
+                pycoQC --summary_file {input} -o {output} {params.options} > {log} 2>&1
+                """
+
+
+        
 
 
 rule merge:
@@ -204,7 +254,6 @@ rule dot2svg:
     shell:
         """dot -Tsvg {input} -o {output}"""
 
-rule get_stats:
 
 
 rule html_report:
@@ -220,10 +269,6 @@ rule html_report:
         data = {"name": "nanomerge",
                  "rulegraph": ".sequana/rulegraph.svg",
                  "pipeline_version": nanomerge.version}
-
-        manager.teardown(extra_files_to_remove=["pyco/pyco.log", "pyco/pyco.html"])
-
-
 
         dirs = ",".join([f'<a href="{x}/">{x}</a>' for x in samples.get_projects()])
 
@@ -264,8 +309,21 @@ rule html_report:
                 "N50": [N50s[k] for k in sorted(sample_names.keys())],
                 "mean read length": [mus[k] for k in sorted(sample_names.keys())],
                 "Number of reads": [nreads[k] for k in sorted(sample_names.keys())]
-                },
-                index=sample_names)
+                }
+                )
+
+            # add a column with potential links to the
+            if "barcode" in samples.df.columns:
+                links = []
+
+                for barcode in df.barcodes.values:
+                    if barcode in samples.df.barcode.values:
+                        links.append(f"pycoqc/{barcode}_summary.html")
+                    else:
+                        links.append("")
+                df['link'] = links
+                df = df.rename({"index": "sample"}, axis=1)
+
 
             total_reads = sum([nreads[k] for k in nreads.keys()])
 
@@ -276,6 +334,11 @@ rule html_report:
                                           'bSort': 'true',
                                           'dom':"RSPrtp"
                                         }
+
+            # add link to the sub html report
+            if "barcode" in samples.df.columns:
+                datatable.datatable.set_links_to_column('link', 'sample')
+
             js = datatable.create_javascript_function()
             htmltable = datatable.create_datatable()
 
@@ -290,7 +353,7 @@ rule html_report:
             s = next(FastA(input[0]))
             try:
                 model = [x.split("=")[1] for x in s.comment.split() if "model_version_id" in x][0]
-            except IndexError:
+            except (IndexError, AttributeError):
                 model = "unknown"
             return model
 
@@ -328,6 +391,10 @@ rule html_report:
 onsuccess:
 
     print("Once done, please clean up the directory using\n'make clean'")
+
+    manager.teardown(extra_files_to_remove=["pyco/pyco.log", "pyco/pyco.html"])
+
+
     shell("chmod -R g+w .")
     shell("rm -rf pyco rulegraph")
 
