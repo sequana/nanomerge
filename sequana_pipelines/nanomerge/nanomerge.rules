@@ -226,52 +226,81 @@ rule html_report:
 
 
         dirs = ",".join([f'<a href="{x}/">{x}</a>' for x in samples.get_projects()])
-        if config['summary']:
 
+        def get_stats():
             from sequana import FastA
             from sequana.stats import N50
             from pylab import mean
+            from collections import defaultdict
 
-            mus = []
-            N50s = []
-            nreads = []
-            sample_names = []
-            barcodes = []
+            lengths = defaultdict(list)
 
             for sample, filename in manager.samples.items():
                 barcode = filename.split("/")[-2]
                 barcodes.append(barcode)
-                print(sample, filename)
                 f = FastA(filename)
-                lengths = list(f.get_lengths_as_dict().values())
-                mus.append(round(mean(lengths), 0))
-                N50s.append(N50(lengths))
-                nreads.append(len(lengths))
-                sample_names.append(sample)
 
-            total_reads = sum(nreads)
+                # keep track of all lengths
+                these_lengths = list(f.get_lengths_as_dict().values())
+                lengths[barcode].extend(these_lengths)
+
+            mus = {}
+            N50s = {}
+            nreads = {}
+            sample_names = {}
+            for barcode in lengths.keys():
+                mus[barcode] = round(mean(lengths[barcode]), 0)
+                N50s[barcode] = N50(lengths[barcode])
+                nreads[barcode] = len(lengths[barcode])
+                try:
+                    sample_names[barcode] = samples.df.query("barcode==@barcode").samplename.values[0]
+                except:
+                    sample_names[barcode] = "undefined"
 
             # a summary table
             df = pd.DataFrame({
-                "sample": sample_names, 
-                "barcodes": barcodes,
-                "N50": N50s,
-                "mean read length": mus,
-                "Number of reads":nreads},
+                "sample": [sample_names[k]  for k in sorted(sample_names.keys())],
+                "barcodes": [k for k in sorted(sample_names.keys())],
+                "N50": [N50s[k] for k in sorted(sample_names.keys())],
+                "mean read length": [mus[k] for k in sorted(sample_names.keys())],
+                "Number of reads": [nreads[k] for k in sorted(sample_names.keys())]
+                },
                 index=sample_names)
+
+            total_reads = sum([nreads[k] for k in nreads.keys()])
+
             from sequana.utils.datatables_js import DataTable
             datatable = DataTable(df, 'nanomerge', index=False)
             datatable.datatable.datatable_options = {'paging': 'false',
                                           'buttons': ['copy', 'csv'],
-                                         'bSort': 'true',
-                                        'dom':"RSPrt"
+                                          'bSort': 'true',
+                                          'dom':"RSPrtp"
                                         }
             js = datatable.create_javascript_function()
             htmltable = datatable.create_datatable()
 
+            return js + htmltable, total_reads
+
+        
+        htmltable, total_reads = get_stats()
+
+
+        def get_model():
+            from sequana import FastA
+            s = next(FastA(input[0]))
+            try:
+                model = [x.split("=")[1] for x in s.comment.split() if "model_version_id" in x][0]
+            except IndexError:
+                model = "unknown"
+            return model
+
+        model = get_model()
+        model = f"The model used for base calling was {model}. "
+
+        if config['summary']:
+
             # a warning message
             percentage=config['sub_sample_summary']['percentage'] / 100
-
 
             if percentage == 1:
                 subsample = ""
@@ -279,7 +308,7 @@ rule html_report:
                 ratio = round(1 / percentage,2)
                 subsample = f'<b style="color:red">Sub sampling was performed. Numbers here below are approximation of must be multiplies by {ratio} since only {percentage} of the data were used to generate the tables and plots</b>'
 
-            # the pyco qc report
+            # the pyco qc repor
             with open("pyco/pyco.html", "r") as fout:
                 pycodata = fout.read()
                 pycodata = '<div class="columns">' + pycodata.split('<div class="columns">')[-1].replace("</div>\n</body>\n</html>","")
@@ -287,12 +316,11 @@ rule html_report:
             # final report
             s = SummaryModule2(data, f"""
                     <h2>General Information</h2>
-                    <p>Your data (fastq files) are available in {dirs} directories. Please see the summary plots here below (if sequence summary was provided), generated with <a href="https://github.com/a-slide/pycoQC">pycoQC</a> software.</p>""" + js + htmltable+f"Total number of reads passing filtering: {total_reads}" + "<hr>" + "<h2>Quality Control information</h2>" + subsample + pycodata)
+                    <p>Your data (fastq files) are available in {dirs} directories. Please see the summary plots here below (if sequence summary was provided), generated with <a href="https://github.com/a-slide/pycoQC">pycoQC</a> software. {model}</p>""" + htmltable + f"Total number of reads passing filtering: {total_reads}" + "<hr>" + "<h2>Quality Control information</h2>" + subsample + pycodata)
         else:
-            s = SummaryModule2(data, f"No summary was found. Your data  (fastq files) are available in {dirs} directories." + js + htmltable +f"Total number of reads passing filtering: {total_reads}"  )
+            s = SummaryModule2(data, f"No summary was found. Your data  (fastq files) are available in {dirs} directories." +  htmltable +f"Total number of reads passing filtering: {total_reads}. {model}"  )
 
         
-localrules: html_report
 
 # ======================================================================================== rulegraph
 
