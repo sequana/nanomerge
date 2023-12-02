@@ -1,4 +1,0 @@
-sequana_pipetools>=0.12.2
-sequana
-pandas
-numpy

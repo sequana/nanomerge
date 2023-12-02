@@ -148,6 +148,7 @@ Changelog
 ========= ====================================================================
 Version   Description
 ========= ====================================================================
+1.5.0     * refactoring to use Click
 1.4.0     * sub sampling was biased in v1.3.0. Using stratified sampling to 
             correcly sample large file. Also set a --promethion option that
             auomatically sub sample 10% of the data
