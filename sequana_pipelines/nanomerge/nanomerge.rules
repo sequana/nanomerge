@@ -31,11 +31,8 @@ or following the instructions from step 1.
 
 from pathlib import Path
 import pandas as pd
-from pylab import linspace 
-from numpy import zeros
 from sequana_pipetools import snaketools as sm
 
-sequana_wrapper_branch = "main"
 # This must be defined before the include
 configfile: "config.yaml"
 
@@ -127,7 +124,8 @@ if config["summary"]:
             binning = 100
         run:
 
-
+            import pandas as pd
+            from pylab import linspace
 
             # We need the min and max first of the entire start time vector
             max_time = 0.
@@ -241,7 +239,7 @@ rule rulegraph:
     params:
         configname = "config.yaml"
     wrapper:
-        f"{sequana_wrapper_branch}/wrappers/rulegraph"
+        f"{manager.wrappers}/wrappers/rulegraph"
 
 
 rule dot2svg:
@@ -262,13 +260,11 @@ rule html_report:
     output:
         "summary.html"
     run:
-        from sequana.modules_report.summary import SummaryModule2
+        from sequana.modules_report.summary import SequanaReport
         from sequana_pipelines import nanomerge
         os.makedirs("images", exist_ok=True)
 
-        data = {"name": "nanomerge",
-                 "rulegraph": ".sequana/rulegraph.svg",
-                 "pipeline_version": nanomerge.version}
+        data = manager.getmetadata()
 
         dirs = ",".join([f'<a href="{x}/">{x}</a>' for x in samples.get_projects()])
 
@@ -344,7 +340,7 @@ rule html_report:
 
             return js + htmltable, total_reads
 
-        
+
         htmltable, total_reads = get_stats()
 
 
@@ -377,13 +373,13 @@ rule html_report:
                 pycodata = '<div class="columns">' + pycodata.split('<div class="columns">')[-1].replace("</div>\n</body>\n</html>","")
 
             # final report
-            s = SummaryModule2(data, f"""
+            s = SequanaReport(data, f"""
                     <h2>General Information</h2>
                     <p>Your data (fastq files) are available in {dirs} directories. Please see the summary plots here below (if sequence summary was provided), generated with <a href="https://github.com/a-slide/pycoQC">pycoQC</a> software. {model}</p>""" + htmltable + f"Total number of reads passing filtering: {total_reads}" + "<hr>" + "<h2>Quality Control information</h2>" + subsample + pycodata)
         else:
-            s = SummaryModule2(data, f"No summary was found. Your data  (fastq files) are available in {dirs} directories." +  htmltable +f"Total number of reads passing filtering: {total_reads}. {model}"  )
+            s = SequanaReport(data, f"No summary was found. Your data  (fastq files) are available in {dirs} directories." +  htmltable +f"Total number of reads passing filtering: {total_reads}. {model}"  )
 
-        
+
 
 # ======================================================================================== rulegraph
 
@@ -399,6 +395,4 @@ onsuccess:
     shell("rm -rf pyco rulegraph")
 
 onerror:
-    from sequana_pipetools.errors import PipeError
-    p = PipeError("nanomerge")
-    p.status()
+    manager.onerror()

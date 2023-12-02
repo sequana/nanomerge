@@ -6,10 +6,11 @@
 # If input_directory provided, use it otherwise if input_pattern provided,
 # use it, otherwise use input_samples.
 # ============================================================================
+sequana_wrappers: "v23.11.28"
 
 # Keep input_readtag empty for nanopore
 input_directory:
-input_readtag:
+#input_readtag:
 input_pattern: '*/*.fastq.gz'
 summary:
 samplesheet: "samplesheet.csv"
@@ -38,7 +39,7 @@ apptainers:
 ###################################################################################
 #
 pycoqc:
-  options: 
+  options:
 
 
 ##################################################################################
@@ -47,3 +48,5 @@ pycoqc:
 #
 sub_sample_summary:
   percentage: 100
+
+

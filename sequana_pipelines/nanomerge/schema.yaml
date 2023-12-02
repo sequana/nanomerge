@@ -3,10 +3,9 @@
 
 type: map
 mapping:
-    "input_directory":
+    "sequana_wrappers":
         type: str
-        required: False
-    "input_readtag":
+    "input_directory":
         type: str
         required: False
     "input_pattern":
