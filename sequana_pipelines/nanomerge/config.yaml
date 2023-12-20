@@ -6,7 +6,7 @@
 # If input_directory provided, use it otherwise if input_pattern provided,
 # use it, otherwise use input_samples.
 # ============================================================================
-sequana_wrappers: "v23.11.28"
+sequana_wrappers: "v23.12.5"
 
 # Keep input_readtag empty for nanopore
 input_directory:
