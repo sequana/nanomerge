@@ -17,9 +17,9 @@
    :target: http://joss.theoj.org/papers/10.21105/joss.00352
    :alt: JOSS (journal of open source software) DOI
 
-.. image:: https://img.shields.io/badge/python-3.8%20%7C%203.9%20%7C3.10-blue.svg
+.. image:: https://img.shields.io/badge/python-3.11%20%7C%203.12-blue.svg
     :target: https://pypi.python.org/pypi/sequana
-    :alt: Python 3.8 | 3.9 | 3.10
+    :alt: Python 3.11 | 3.12
 
 
 
@@ -71,14 +71,9 @@ Note that the different between the two is the extra `*/` before the `*.fastq.gz
 In both bases, the command creates a directory with the pipeline and configuration file. You will then need to execute the pipeline::
 
     cd nanomerge
-    sh nanomerge.sh  # for a local run
+    bash nanomerge.sh  # for a local run
 
-This launch a snakemake pipeline. If you are familiar with snakemake, you can 
-retrieve the pipeline itself and its configuration files and then execute the pipeline yourself with specific parameters::
-
-    snakemake -s nanomerge.rules -c config.yaml --cores 4 --stats stats.txt
-
-Or use `sequanix <https://sequana.readthedocs.io/en/master/sequanix.html>`_ interface.
+This launches a snakemake pipeline.
 
 Concerning the sample sheet, whether your data is barcoded or not, it should be a CSV file ::
 
@@ -148,7 +143,8 @@ Changelog
 ========= ====================================================================
 Version   Description
 ========= ====================================================================
-1.5.1     * Fix wrappers tag
+1.6.0     * modernise packaging (poetry), drop click_completion, use
+            importlib.metadata for version, refresh CI workflows.
 1.5.0     * refactoring to use Click
 1.4.0     * sub sampling was biased in v1.3.0. Using stratified sampling to 
             correcly sample large file. Also set a --promethion option that

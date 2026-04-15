@@ -1,2 +1,2 @@
 pycoQC
-dot
+graphviz

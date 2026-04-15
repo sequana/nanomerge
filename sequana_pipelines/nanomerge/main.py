@@ -17,9 +17,6 @@ import shutil
 from pathlib import Path
 
 import rich_click as click
-import click_completion
-
-click_completion.init()
 
 from sequana_pipetools.options import *
 from sequana_pipetools import SequanaManager
@@ -140,7 +137,7 @@ def main(**options):
             cfg.summary = None
 
 
-    if options['from_project']:
+    if options.from_project:
         if '--sample-sheet' in sys.argv:
             fill_samplesheet()
         if "--summary" in sys.argv:

@@ -1,13 +1,11 @@
 name: nanomerge
-
 channels:
-  - conda-forge
-  - bioconda
-  - defaults
-
+- conda-forge
+- bioconda
+- defaults
 dependencies:
-  - pycoQC
-  - pip:
-    - sequana
-
-
+- pycoQC
+- graphviz
+- pulp>=2.8
+- pip:
+  - sequana
